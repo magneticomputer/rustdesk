@@ -339,12 +339,15 @@ jobs:
         # is x64 / ARM64; the produced Package.msi is globbed since its bin/<platform>/ dir varies.
         if: env.UPLOAD_ARTIFACT == 'true'
         run: |
-          # The portable self-extractor above already consumed rustdesk.exe. WiX installs the
-          # main exe as "$(var.Product).exe" and derives the service name + config folder from
-          # the same var, so Product must equal the app's service identifier — get_app_name_id()
-          # = "MagneticSupport" (no space). Rename the dist exe to match before preprocessing.
-          mv ../../rustdesk/rustdesk.exe ../../rustdesk/MagneticSupport.exe
+          # WiX installs the main exe as "$(var.Product).exe" and derives the service
+          # name + config folder from the same var, so Product must equal the app's
+          # service identifier — get_app_name_id() = "MagneticSupport" (no space).
+          # Rename the dist exe to match before preprocessing. The rename must run from
+          # inside ./res/msi so "../../rustdesk" resolves to the same dist dir that
+          # preprocess.py reads (running it from the repo root pointed one level too
+          # high — D:\a\rustdesk\rustdesk.exe — and failed).
           pushd ./res/msi
+          mv ../../rustdesk/rustdesk.exe ../../rustdesk/MagneticSupport.exe
           python preprocess.py --arp -d ../../rustdesk --app-name MagneticSupport -m "Magnetic"
           nuget restore msi.sln
           $msiPlatform = if ('${{ matrix.job.arch }}' -eq 'aarch64') { 'ARM64' } else { 'x64' }
