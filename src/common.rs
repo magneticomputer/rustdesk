@@ -950,8 +950,14 @@ pub fn check_software_update() {
 
 // No need to check `danger_accept_invalid_cert` for now.
 // Because the url is always `https://api.rustdesk.com/version/latest`.
+// Magnetic: disabled. The upstream update check phones home to
+// api.rustdesk.com, which is an unrelated third-party server and a
+// branding/privacy leak. Magnetic Support ships updates via its own
+// channels (support.magnetic.computer / the stores), so never contact it.
 #[tokio::main(flavor = "current_thread")]
+#[allow(unreachable_code, unused_variables, unused_mut)]
 pub async fn do_check_software_update() -> hbb_common::ResultType<()> {
+    return Ok(());
     let (request, url) =
         hbb_common::version_check_request(hbb_common::VER_TYPE_RUSTDESK_CLIENT.to_string());
     let proxy_conf = Config::get_socks();
