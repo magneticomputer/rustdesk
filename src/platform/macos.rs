@@ -308,8 +308,8 @@ fn correct_app_name(s: &str) -> String {
         s = s.replace("com.carriez.rustdesk", &bundleid);
     }
     s = s.replace("com.carriez", &hbb_common::config::ORG.read().unwrap().clone());
-    s = s.replace("rustdesk", &crate::get_app_name().to_lowercase());
-    s = s.replace("RustDesk", &crate::get_app_name());
+    s = s.replace("rustdesk", &crate::get_app_name_id().to_lowercase());
+    s = s.replace("RustDesk", &crate::get_app_name_id());
     s
 }
 
@@ -358,7 +358,7 @@ pub fn uninstall_service(show_new_window: bool, sync: bool) -> bool {
                     if show_new_window {
                         std::process::Command::new("open")
                             .arg("-n")
-                            .arg(&format!("/Applications/{}.app", crate::get_app_name()))
+                            .arg(&format!("/Applications/{}.app", crate::get_app_name_id()))
                             .spawn()
                             .ok();
                         // leave open a little time
@@ -807,7 +807,7 @@ pub fn is_installed() -> bool {
         return p
             .to_str()
             .unwrap_or_default()
-            .starts_with(&format!("/Applications/{}.app", crate::get_app_name()));
+            .starts_with(&format!("/Applications/{}.app", crate::get_app_name_id()));
     }
     false
 }
@@ -958,7 +958,7 @@ fn extract_dmg(dmg_path: &str, target_dir: &str) -> ResultType<()> {
     }
     let _guard = DmgGuard(mount_point);
 
-    let app_name = format!("{}.app", crate::get_app_name());
+    let app_name = format!("{}.app", crate::get_app_name_id());
     let src_path = format!("{}/{}", mount_point, app_name);
     let dest_path = format!("{}/{}", target_dir, app_name);
 

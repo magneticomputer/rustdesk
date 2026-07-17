@@ -759,7 +759,7 @@ async fn handle(data: Data, stream: &mut Connection) {
                         hbb_common::sleep(1.5).await;
                         std::process::Command::new("open")
                             .arg("-n")
-                            .arg(&format!("/Applications/{}.app", crate::get_app_name()))
+                            .arg(&format!("/Applications/{}.app", crate::get_app_name_id()))
                             .spawn()
                             .ok();
                     }

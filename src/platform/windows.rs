@@ -530,7 +530,7 @@ fn service_main(arguments: Vec<OsString>) {
 
 pub fn start_os_service() {
     if let Err(e) =
-        windows_service::service_dispatcher::start(crate::get_app_name(), ffi_service_main)
+        windows_service::service_dispatcher::start(crate::get_app_name_id(), ffi_service_main)
     {
         log::error!("start_service failed: {}", e);
     }
@@ -651,7 +651,7 @@ async fn run_service(_arguments: Vec<OsString>) -> ResultType<()> {
     };
 
     // Register system service event handler
-    let status_handle = service_control_handler::register(crate::get_app_name(), event_handler)?;
+    let status_handle = service_control_handler::register(crate::get_app_name_id(), event_handler)?;
 
     let next_status = ServiceStatus {
         // Should match the one from system service registry

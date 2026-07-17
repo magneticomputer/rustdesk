@@ -1004,6 +1004,13 @@ pub fn get_app_name() -> String {
     hbb_common::config::APP_NAME.read().unwrap().clone()
 }
 
+// Space-free form of the app name for filesystem paths, .app bundle names and
+// service identifiers (launchd labels / Windows service keys), where a space in
+// the display name ("Magnetic Support") would break the identifier.
+pub fn get_app_name_id() -> String {
+    get_app_name().replace(' ', "")
+}
+
 #[inline]
 pub fn is_rustdesk() -> bool {
     hbb_common::config::APP_NAME.read().unwrap().eq("RustDesk")
@@ -1019,7 +1026,7 @@ pub fn get_full_name() -> String {
     format!(
         "{}.{}",
         hbb_common::config::ORG.read().unwrap(),
-        hbb_common::config::APP_NAME.read().unwrap(),
+        hbb_common::config::APP_NAME.read().unwrap().replace(' ', ""),
     )
 }
 
