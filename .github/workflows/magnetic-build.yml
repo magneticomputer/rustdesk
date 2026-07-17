@@ -339,8 +339,13 @@ jobs:
         # is x64 / ARM64; the produced Package.msi is globbed since its bin/<platform>/ dir varies.
         if: env.UPLOAD_ARTIFACT == 'true'
         run: |
+          # The portable self-extractor above already consumed rustdesk.exe. WiX installs the
+          # main exe as "$(var.Product).exe" and derives the service name + config folder from
+          # the same var, so Product must equal the app's service identifier — get_app_name_id()
+          # = "MagneticSupport" (no space). Rename the dist exe to match before preprocessing.
+          mv ../../rustdesk/rustdesk.exe ../../rustdesk/MagneticSupport.exe
           pushd ./res/msi
-          python preprocess.py --arp -d ../../rustdesk
+          python preprocess.py --arp -d ../../rustdesk --app-name MagneticSupport -m "Magnetic"
           nuget restore msi.sln
           $msiPlatform = if ('${{ matrix.job.arch }}' -eq 'aarch64') { 'ARM64' } else { 'x64' }
           msbuild msi.sln -p:Configuration=Release -p:Platform=$msiPlatform /p:TargetVersion=Windows10
@@ -717,7 +722,18 @@ jobs:
           CREATE_DMG="$(command -v create-dmg)"
           CREATE_DMG="$(readlink -f "$CREATE_DMG")"
           sed -i -e 's/MAXIMUM_UNMOUNTING_ATTEMPTS=3/MAXIMUM_UNMOUNTING_ATTEMPTS=7/' "$CREATE_DMG"
-          create-dmg --icon "MagneticSupport.app" 200 190 --hide-extension "MagneticSupport.app" --window-size 800 400 --app-drop-link 600 185 rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.dmg ./flutter/build/macos/Build/Products/Release/MagneticSupport.app
+          # Ad-hoc re-sign the WHOLE bundle so every framework carries a consistent
+          # (empty) Team ID. Without this the CI leaves Flutter's Google-signed
+          # framework next to an unsigned main binary; macOS library validation then
+          # refuses to load it ("different Team IDs") and the app crashes on launch.
+          APP=./flutter/build/macos/Build/Products/Release/MagneticSupport.app
+          codesign --remove-signature "$APP" 2>/dev/null || true
+          find "$APP/Contents/Frameworks" -name "*.framework" -o -name "*.dylib" | while read -r f; do
+            codesign --force --sign - --timestamp=none "$f" 2>/dev/null || true
+          done
+          codesign --force --deep --sign - --timestamp=none "$APP"
+          codesign --verify --deep --strict "$APP" && echo "ad-hoc signature OK"
+          create-dmg --icon "MagneticSupport.app" 200 190 --hide-extension "MagneticSupport.app" --window-size 800 400 --app-drop-link 600 185 rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}.dmg "$APP"
 
       - name: Upload unsigned macOS app
         if: env.UPLOAD_ARTIFACT == 'true'
