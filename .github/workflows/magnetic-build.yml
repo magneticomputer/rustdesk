@@ -776,11 +776,30 @@ jobs:
           security unlock-keychain -p ${{ secrets.MACOS_P12_PASSWORD }} rustdesk.keychain
           # start sign the rustdesk.app and dmg
           rm -rf *.dmg || true
-          codesign --force --options runtime -s ${{ secrets.MACOS_CODESIGN_IDENTITY }} --deep --strict ./flutter/build/macos/Build/Products/Release/MagneticSupport.app -vvv
-          create-dmg --icon "MagneticSupport.app" 200 190 --hide-extension "MagneticSupport.app" --window-size 800 400 --app-drop-link 600 185 rustdesk-${{ env.VERSION }}.dmg ./flutter/build/macos/Build/Products/Release/MagneticSupport.app
-          codesign --force --options runtime -s ${{ secrets.MACOS_CODESIGN_IDENTITY }} --deep --strict rustdesk-${{ env.VERSION }}.dmg -vvv
-          # notarize the rustdesk-${{ env.VERSION }}.dmg
-          rcodesign notary-submit --api-key-path ${{ github.workspace }}/rustdesk.json  --staple rustdesk-${{ env.VERSION }}.dmg
+          APP=./flutter/build/macos/Build/Products/Release/MagneticSupport.app
+          IDENTITY="${{ secrets.MACOS_CODESIGN_IDENTITY }}"
+          ENT=./flutter/macos/Runner/Release.entitlements
+          # The unsigned step already ad-hoc signed everything. `codesign --deep`
+          # does NOT replace an existing nested signature, so notarization would
+          # reject it ("not signed with a valid Developer ID"). Strip every nested
+          # signature and re-sign each Mach-O inside-out with the Developer ID +
+          # hardened runtime, then the main bundle with the app entitlements.
+          find "$APP/Contents/Frameworks" \( -name "*.framework" -o -name "*.dylib" \) -maxdepth 1 | while read -r f; do
+            codesign --remove-signature "$f" 2>/dev/null || true
+            codesign --force --options runtime --timestamp -s "$IDENTITY" "$f"
+          done
+          for h in "$APP"/Contents/MacOS/*; do
+            codesign --remove-signature "$h" 2>/dev/null || true
+            [ "$(basename "$h")" = "MagneticSupport" ] && continue
+            codesign --force --options runtime --timestamp -s "$IDENTITY" "$h"
+          done
+          codesign --remove-signature "$APP" 2>/dev/null || true
+          codesign --force --options runtime --timestamp --entitlements "$ENT" -s "$IDENTITY" "$APP"
+          codesign --verify --deep --strict "$APP" && echo "Developer ID signature verified"
+          create-dmg --icon "MagneticSupport.app" 200 190 --hide-extension "MagneticSupport.app" --window-size 800 400 --app-drop-link 600 185 rustdesk-${{ env.VERSION }}.dmg "$APP"
+          codesign --force --timestamp -s "$IDENTITY" rustdesk-${{ env.VERSION }}.dmg
+          # notarize + staple the dmg so Gatekeeper approves it offline
+          rcodesign notary-submit --api-key-path ${{ github.workspace }}/rustdesk.json --staple rustdesk-${{ env.VERSION }}.dmg
 
       - name: Rename rustdesk
         if: env.UPLOAD_ARTIFACT == 'true'
