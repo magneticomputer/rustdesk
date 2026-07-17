@@ -1093,7 +1093,11 @@ fn get_api_server_(api: String, custom: String) -> String {
             return format!("http://{}", s);
         }
     }
-    "https://admin.rustdesk.com".to_owned()
+    // Magnetic: default the API/account server to our own rendezvous host instead
+    // of admin.rustdesk.com, so account login and device registration never contact
+    // RustDesk's servers. (No custom-rendezvous-server option is set because our host
+    // is baked into RENDEZVOUS_SERVERS, so control reaches this fallback.)
+    format!("https://{}", config::RENDEZVOUS_SERVERS[0])
 }
 
 #[inline]
