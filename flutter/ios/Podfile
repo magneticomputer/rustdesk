@@ -31,12 +31,6 @@ target 'Runner' do
   use_modular_headers!
 
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
-
-  # App Store ITMS-91061: DKImagePickerController < 4.3.9 (pulled in by
-  # file_picker) and its transitive deps (DKPhotoGallery, SwiftyGif) lack a
-  # PrivacyInfo.xcprivacy. Bumping just the top pod pulls up-to-date manifests
-  # for the whole chain; Podfile.lock is not committed so CI resolves fresh.
-  pod 'DKImagePickerController', '~> 4.3.9'
 end
 
 post_install do |installer|
