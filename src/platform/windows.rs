@@ -1372,7 +1372,13 @@ fn get_default_install_path() -> String {
             pf = tmp;
         }
     }
-    format!("{}\\{}", pf, crate::get_app_name())
+    // Magnetic: use the space-free app id ("MagneticSupport") for the on-disk
+    // install folder so it matches where the MSI actually installs. get_app_name()
+    // is the display name ("Magnetic Support", with a space); using it here made
+    // is_installed() look for C:\Program Files\Magnetic Support\ while the MSI put
+    // the files under C:\Program Files\MagneticSupport\, so the app never detected
+    // itself as installed and the UAC "Install" card never went away.
+    format!("{}\\{}", pf, crate::get_app_name_id())
 }
 
 pub fn check_update_broker_process() -> ResultType<()> {
@@ -1430,7 +1436,11 @@ fn get_install_info_with_subkey(subkey: String) -> (String, String, String, Stri
         "%ProgramData%\\Microsoft\\Windows\\Start Menu\\Programs\\{}",
         crate::get_app_name()
     );
-    let exe = format!("{}\\{}.exe", path, crate::get_app_name());
+    // Magnetic: the installed exe is "MagneticSupport.exe" (space-free id), matching
+    // the MSI ("$(var.Product).exe") and the built-in installer. Using get_app_name()
+    // here checked for "Magnetic Support.exe" which never exists, so is_installed()
+    // stayed false after installing and the UAC card persisted.
+    let exe = format!("{}\\{}.exe", path, crate::get_app_name_id());
     (subkey, path, start_menu, exe)
 }
 
@@ -1466,7 +1476,9 @@ pub fn rename_exe_cmd(src_exe: &str, path: &str) -> ResultType<String> {
         .ok_or(anyhow!("Can't get file name of {src_exe}"))?
         .to_string_lossy()
         .to_string();
-    let app_name = crate::get_app_name().to_lowercase();
+    // Magnetic: rename to the space-free id ("magneticsupport.exe") so the built-in
+    // installer produces the same exe name that is_installed()/the MSI expect.
+    let app_name = crate::get_app_name_id().to_lowercase();
     if src_exe_filename.to_lowercase() == format!("{app_name}.exe") {
         Ok("".to_owned())
     } else {
