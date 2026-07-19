@@ -31,6 +31,13 @@ target 'Runner' do
   use_modular_headers!
 
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
+
+  # App Store ITMS-91061: these SDKs are on Apple's privacy-manifest list; the
+  # versions resolved by file_picker lack PrivacyInfo.xcprivacy, so pin the
+  # first releases that ship one.
+  pod 'DKImagePickerController', '~> 4.3.9'
+  pod 'DKPhotoGallery', '~> 0.0.19'
+  pod 'SwiftyGif', '~> 5.4.5'
 end
 
 post_install do |installer|

@@ -1250,6 +1250,9 @@ jobs:
           mkdir -p signed-apk signed-aab
           mv ./flutter/build/app/outputs/flutter-apk/app-${{ env.reltype }}.apk signed-apk/rustdesk-${{ env.VERSION }}-universal${{ env.suffix }}.apk
           mv ./flutter/build/app/outputs/bundle/${{ env.reltype }}/app-${{ env.reltype }}.aab signed-aab/rustdesk-${{ env.VERSION }}-playstore${{ env.suffix }}.aab
+          # Play rejects bundles with >1 certificate chain: strip the debug signature
+          # left by the gradle debug signing config before re-signing with the upload key
+          zip -d signed-aab/rustdesk-${{ env.VERSION }}-playstore${{ env.suffix }}.aab "META-INF/*.SF" "META-INF/*.RSA" "META-INF/*.DSA" "META-INF/*.EC" "META-INF/MANIFEST.MF" || true
 
       # https://github.com/r0adkll/sign-android-release/issues/84#issuecomment-1889636075
       - name: Setup sign tool version variable
