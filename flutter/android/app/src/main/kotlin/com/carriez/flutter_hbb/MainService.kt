@@ -17,6 +17,7 @@ import android.app.PendingIntent.FLAG_UPDATE_CURRENT
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.pm.ServiceInfo
 import android.content.res.Configuration
 import android.content.res.Configuration.ORIENTATION_LANDSCAPE
 import android.graphics.Color
@@ -339,6 +340,7 @@ class MainService : Service() {
             intent.getParcelableExtra<Intent>(EXT_MEDIA_PROJECTION_RES_INTENT)?.let {
                 mediaProjection =
                     mediaProjectionManager.getMediaProjection(Activity.RESULT_OK, it)
+                promoteToMediaProjection()
                 checkMediaPermission()
                 _isReady = true
             } ?: let {
@@ -642,7 +644,35 @@ class MainService : Service() {
             .setColor(ContextCompat.getColor(this, R.color.primary))
             .setWhen(System.currentTimeMillis())
             .build()
-        startForeground(DEFAULT_NOTIFY_ID, notification)
+        startForegroundCompat(notification)
+    }
+
+    // targetSdk 34+ forbids starting a foreground service with type mediaProjection before the
+    // user has granted the screen-capture consent: start as specialUse, then promote via
+    // promoteToMediaProjection() once the projection token is available.
+    private var lastForegroundNotification: Notification? = null
+    private fun startForegroundCompat(notification: Notification) {
+        lastForegroundNotification = notification
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            val type = if (mediaProjection != null)
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION
+            else
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+            startForeground(DEFAULT_NOTIFY_ID, notification, type)
+        } else {
+            startForeground(DEFAULT_NOTIFY_ID, notification)
+        }
+    }
+
+    private fun promoteToMediaProjection() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            lastForegroundNotification?.let {
+                startForeground(
+                    DEFAULT_NOTIFY_ID, it,
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION
+                )
+            }
+        }
     }
 
     private fun loginRequestNotification(
