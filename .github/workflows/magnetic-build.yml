@@ -476,6 +476,56 @@ jobs:
           pushd flutter
           flutter build ipa --release --no-codesign
 
+      # App Store ITMS-91061: several third-party SDKs bundled by Flutter/CocoaPods
+      # (DKImagePickerController, DKPhotoGallery, SwiftyGif, device_info_plus,
+      # package_info_plus, sqflite, wakelock_plus, ...) ship without a privacy
+      # manifest. Inject a minimal PrivacyInfo.xcprivacy into every framework that
+      # lacks one; the export step re-signs the frameworks afterwards.
+      - name: Inject privacy manifests into bundled frameworks
+        shell: bash
+        run: |
+          cat > /tmp/PrivacyInfo.xcprivacy <<'PLISTEOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>NSPrivacyTracking</key><false/>
+            <key>NSPrivacyTrackingDomains</key><array/>
+            <key>NSPrivacyCollectedDataTypes</key><array/>
+            <key>NSPrivacyAccessedAPITypes</key>
+            <array>
+              <dict>
+                <key>NSPrivacyAccessedAPIType</key><string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+                <key>NSPrivacyAccessedAPITypeReasons</key><array><string>CA92.1</string></array>
+              </dict>
+              <dict>
+                <key>NSPrivacyAccessedAPIType</key><string>NSPrivacyAccessedAPICategoryFileTimestamp</string>
+                <key>NSPrivacyAccessedAPITypeReasons</key><array><string>C617.1</string></array>
+              </dict>
+              <dict>
+                <key>NSPrivacyAccessedAPIType</key><string>NSPrivacyAccessedAPICategorySystemBootTime</string>
+                <key>NSPrivacyAccessedAPITypeReasons</key><array><string>35F9.1</string></array>
+              </dict>
+              <dict>
+                <key>NSPrivacyAccessedAPIType</key><string>NSPrivacyAccessedAPICategoryDiskSpace</string>
+                <key>NSPrivacyAccessedAPITypeReasons</key><array><string>E174.1</string></array>
+              </dict>
+            </array>
+          </dict>
+          </plist>
+          PLISTEOF
+          APP="flutter/build/ios/archive/Runner.xcarchive/Products/Applications/Runner.app"
+          ls "$APP/Frameworks/" || true
+          for fw in "$APP/Frameworks/"*.framework; do
+            name=$(basename "$fw" .framework)
+            if find "$fw" -name "PrivacyInfo.xcprivacy" | grep -q .; then
+              echo "manifest gia' presente: $name"
+            else
+              cp /tmp/PrivacyInfo.xcprivacy "$fw/PrivacyInfo.xcprivacy"
+              echo "manifest INIETTATO: $name"
+            fi
+          done
+
       - name: Import signing certificate and provisioning profile
         if: ${{ env.IOS_P12_BASE64 != '' }}
         env:
