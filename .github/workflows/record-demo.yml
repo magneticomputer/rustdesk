@@ -22,6 +22,32 @@ jobs:
           gh release download magnetic -R ${{ github.repository }} -p "rustdesk-*-x86_64-signed.apk" -O app.apk
           ls -la app.apk
 
+      - name: Write tap helper
+        run: |
+          cat > tap_text.py <<'PYEOF'
+          import re, sys, subprocess
+          pattern = sys.argv[1]
+          xml = open('ui.xml', encoding='utf-8', errors='ignore').read()
+          best = None
+          for m in re.finditer(r'<node[^>]*/?>', xml):
+              node = m.group(0)
+              txt = re.search(r'text="([^"]*)"', node)
+              desc = re.search(r'content-desc="([^"]*)"', node)
+              label = (txt.group(1) if txt else '') + ' ' + (desc.group(1) if desc else '')
+              if re.search(pattern, label, re.I):
+                  b = re.search(r'bounds="\[(\d+),(\d+)\]\[(\d+),(\d+)\]"', node)
+                  if b:
+                      x = (int(b.group(1)) + int(b.group(3))) // 2
+                      y = (int(b.group(2)) + int(b.group(4))) // 2
+                      best = (x, y, label.strip()[:60])
+                      break
+          if best:
+              print(f'tap "{best[2]}" at {best[0]},{best[1]}')
+              subprocess.run(['adb', 'shell', 'input', 'tap', str(best[0]), str(best[1])])
+          else:
+              print(f'NOT FOUND: {pattern}')
+          PYEOF
+
       - name: Boot emulator, drive app, record video
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -37,32 +63,9 @@ jobs:
 
             # helper: tap the center of the first UI node whose text/desc matches a regex
             tap_text() {
-              local pattern="$1"
               adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1 || true
               adb pull /sdcard/ui.xml ui.xml >/dev/null 2>&1 || true
-              python3 - "$pattern" <<'PYEOF'
-            import re, sys, subprocess
-            pattern = sys.argv[1]
-            xml = open('ui.xml', encoding='utf-8', errors='ignore').read()
-            best = None
-            for m in re.finditer(r'<node[^>]*/?>', xml):
-                node = m.group(0)
-                txt = re.search(r'text="([^"]*)"', node)
-                desc = re.search(r'content-desc="([^"]*)"', node)
-                label = (txt.group(1) if txt else '') + ' ' + (desc.group(1) if desc else '')
-                if re.search(pattern, label, re.I):
-                    b = re.search(r'bounds="\[(\d+),(\d+)\]\[(\d+),(\d+)\]"', node)
-                    if b:
-                        x = (int(b.group(1)) + int(b.group(3))) // 2
-                        y = (int(b.group(2)) + int(b.group(4))) // 2
-                        best = (x, y, label.strip()[:60])
-                        break
-            if best:
-                print(f'tap "{best[2]}" at {best[0]},{best[1]}')
-                subprocess.run(['adb', 'shell', 'input', 'tap', str(best[0]), str(best[1])])
-            else:
-                print(f'NOT FOUND: {pattern}')
-            PYEOF
+              python3 tap_text.py "$1" || true
             }
             snap() { adb exec-out screencap -p > "shot_$1.png" || true; }
 
