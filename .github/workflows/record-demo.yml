@@ -78,6 +78,12 @@ jobs:
           }
           snap() { adb exec-out screencap -p > "shot_$1.png" || true; }
 
+          # pre-grant the ancillary permissions the app asks for in a chain
+          # (notifications, overlay) so the recording focuses on the screen-capture
+          # consent, which is what the Play declaration is about
+          adb shell pm grant computer.magnetic.support android.permission.POST_NOTIFICATIONS || true
+          adb shell appops set computer.magnetic.support SYSTEM_ALERT_WINDOW allow || true
+
           adb shell "screenrecord --bit-rate 6000000 --size 720x1600 /sdcard/demo.mp4" &
           RECPID=$!
           sleep 2
@@ -103,10 +109,10 @@ jobs:
           tap_text '^I Agree$|^Accetto$|^OK$|^Ok$' ; sleep 4
           snap 04b_after_agree
 
-          # the notifications permission dialog only appears at this point
-          tap_text '^Allow$|^Consenti$' ; sleep 4
-          snap 04c_after_notif_allow
-          dump_ui after_notif
+          # any leftover permission dialog
+          tap_text '^Allow$|^Consenti$' ; sleep 3
+          snap 04c_after_allow
+          dump_ui after_allow
 
           dump_ui consent_dialog
           tap_text 'Start now|Inizia adesso|Avvia adesso|Start recording or casting|Entire screen' ; sleep 2
