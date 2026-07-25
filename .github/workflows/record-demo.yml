@@ -60,6 +60,20 @@ jobs:
             adb pull /sdcard/ui.xml ui.xml >/dev/null 2>&1 || true
             python3 tap_text.py "$1" || true
           }
+          # dump the whole UI tree so failed matches can be diagnosed from the log
+          dump_ui() {
+            adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1 || true
+            adb pull /sdcard/ui.xml "ui_$1.xml" >/dev/null 2>&1 || true
+            echo "--- UI $1 ---"
+            python3 -c "
+          import re,sys
+          xml=open('ui_$1.xml',encoding='utf-8',errors='ignore').read()
+          for m in re.finditer(r'<node[^>]*/?>',xml):
+              n=m.group(0)
+              t=re.search(r'text=\"([^\"]+)\"',n); d=re.search(r'content-desc=\"([^\"]+)\"',n)
+              if t or d: print(' |', (t.group(1) if t else ''), '/', (d.group(1) if d else ''))
+          " 2>/dev/null || true
+          }
           snap() { adb exec-out screencap -p > "shot_$1.png" || true; }
 
           adb shell "screenrecord --bit-rate 6000000 --size 720x1600 /sdcard/demo.mp4" &
@@ -73,15 +87,23 @@ jobs:
           tap_text 'Allow|Consenti' ; sleep 3
           snap 02_after_notif
 
-          tap_text 'Start service|Avvia servizio|Start Service' ; sleep 4
-          snap 03_after_start
+          # the service lives in the "Share screen" bottom tab, not on the home page
+          tap_text 'Share screen|Condividi schermo' ; sleep 4
+          snap 03_share_tab
+          dump_ui share_tab
 
-          tap_text '^OK$|^Ok$' ; sleep 3
-          snap 04_after_ok
+          tap_text 'Start service|Avvia servizio|Start Service|Start' ; sleep 4
+          snap 04_after_start
+          dump_ui after_start
 
+          tap_text '^OK$|^Ok$|Got it|Ho capito' ; sleep 3
+          snap 04b_after_ok
+
+          dump_ui consent_dialog
           tap_text 'Start now|Inizia adesso|Avvia adesso|Start recording or casting|Entire screen' ; sleep 2
           tap_text 'Start now|Inizia adesso|Avvia adesso' ; sleep 5
           snap 05_after_consent
+          dump_ui after_consent
 
           adb shell cmd statusbar expand-notifications ; sleep 4
           snap 06_notifications
