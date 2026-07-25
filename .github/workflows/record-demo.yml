@@ -102,7 +102,11 @@ jobs:
           # anti-scam warning shown before the service starts
           tap_text '^I Agree$|^Accetto$|^OK$|^Ok$' ; sleep 4
           snap 04b_after_agree
-          dump_ui after_agree
+
+          # the notifications permission dialog only appears at this point
+          tap_text '^Allow$|^Consenti$' ; sleep 4
+          snap 04c_after_notif_allow
+          dump_ui after_notif
 
           dump_ui consent_dialog
           tap_text 'Start now|Inizia adesso|Avvia adesso|Start recording or casting|Entire screen' ; sleep 2
