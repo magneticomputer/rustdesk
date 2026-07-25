@@ -118,9 +118,9 @@ jobs:
           tap_text '^I Agree$|^Accetto$|^OK$|^Ok$' ; sleep 4
           snap 04b_after_agree
 
-          # any leftover permission dialog
-          tap_text '^Allow$|^Consenti$' ; sleep 3
-          snap 04c_after_allow
+          # confirmation dialog: "Turning on Screen Capture will start the service"
+          tap_text '^OK$|^Allow$|^Consenti$' ; sleep 4
+          snap 04c_after_ok
 
           # if a permission chain pushed us into Settings, come back to the app
           if adb shell dumpsys window 2>/dev/null | grep -q "mCurrentFocus.*com.android.settings"; then
