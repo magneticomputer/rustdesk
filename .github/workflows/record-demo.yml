@@ -77,6 +77,8 @@ jobs:
           " 2>/dev/null || true
           }
           snap() { adb exec-out screencap -p > "shot_$1.png" || true; }
+          # the emulator sometimes throws "<app> isn't responding" over everything
+          dismiss_anr() { tap_text "^Wait$|^Attendi$|^Close app$" >/dev/null 2>&1 || true; }
 
           # pre-grant the ancillary permissions the app asks for in a chain
           # (notifications, overlay) so the recording focuses on the screen-capture
@@ -84,12 +86,18 @@ jobs:
           adb shell pm grant computer.magnetic.support android.permission.POST_NOTIFICATIONS || true
           adb shell appops set computer.magnetic.support SYSTEM_ALERT_WINDOW allow || true
 
+          # let the freshly booted system settle, then clear any ANR dialog
+          sleep 20
+          dismiss_anr
+          adb shell input keyevent KEYCODE_HOME ; sleep 2
+
           adb shell "screenrecord --bit-rate 6000000 --size 720x1600 /sdcard/demo.mp4" &
           RECPID=$!
           sleep 2
 
           adb shell am start -n computer.magnetic.support/com.carriez.flutter_hbb.MainActivity
           sleep 12
+          dismiss_anr
           snap 01_home
 
           tap_text 'Allow|Consenti' ; sleep 3
