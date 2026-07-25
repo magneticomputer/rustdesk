@@ -85,6 +85,7 @@ jobs:
           # consent, which is what the Play declaration is about
           adb shell pm grant computer.magnetic.support android.permission.POST_NOTIFICATIONS || true
           adb shell appops set computer.magnetic.support SYSTEM_ALERT_WINDOW allow || true
+          adb shell appops set computer.magnetic.support MANAGE_EXTERNAL_STORAGE allow || true
 
           # let the freshly booted system settle, then clear any ANR dialog
           sleep 20
@@ -120,7 +121,18 @@ jobs:
           # any leftover permission dialog
           tap_text '^Allow$|^Consenti$' ; sleep 3
           snap 04c_after_allow
-          dump_ui after_allow
+
+          # if a permission chain pushed us into Settings, come back to the app
+          if adb shell dumpsys window 2>/dev/null | grep -q "mCurrentFocus.*com.android.settings"; then
+            echo "in Settings — going back to the app"
+            adb shell input keyevent KEYCODE_BACK ; sleep 2
+            adb shell am start -n computer.magnetic.support/com.carriez.flutter_hbb.MainActivity ; sleep 5
+            tap_text 'Share screen|Condividi schermo' ; sleep 3
+            tap_text '^Start service$|^Avvia servizio$' ; sleep 4
+            tap_text '^I Agree$|^Accetto$' ; sleep 4
+          fi
+          snap 04d_back_in_app
+          dump_ui back_in_app
 
           dump_ui consent_dialog
           tap_text 'Start now|Inizia adesso|Avvia adesso|Start recording or casting|Entire screen' ; sleep 2
