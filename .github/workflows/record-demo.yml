@@ -48,6 +48,57 @@ jobs:
               print(f'NOT FOUND: {pattern}')
           PYEOF
 
+          # the emulator-runner action executes each script line separately, so
+          # all multi-line logic lives in this file and script: is one line
+          cat > demo.sh <<'SHEOF'
+          #!/bin/bash
+          set -x
+          adb install -r app.apk
+
+          tap_text() {
+            adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1 || true
+            adb pull /sdcard/ui.xml ui.xml >/dev/null 2>&1 || true
+            python3 tap_text.py "$1" || true
+          }
+          snap() { adb exec-out screencap -p > "shot_$1.png" || true; }
+
+          adb shell "screenrecord --bit-rate 6000000 --size 720x1600 /sdcard/demo.mp4" &
+          RECPID=$!
+          sleep 2
+
+          adb shell am start -n computer.magnetic.support/com.carriez.flutter_hbb.MainActivity
+          sleep 12
+          snap 01_home
+
+          tap_text 'Allow|Consenti' ; sleep 3
+          snap 02_after_notif
+
+          tap_text 'Start service|Avvia servizio|Start Service' ; sleep 4
+          snap 03_after_start
+
+          tap_text '^OK$|^Ok$' ; sleep 3
+          snap 04_after_ok
+
+          tap_text 'Start now|Inizia adesso|Avvia adesso|Start recording or casting|Entire screen' ; sleep 2
+          tap_text 'Start now|Inizia adesso|Avvia adesso' ; sleep 5
+          snap 05_after_consent
+
+          adb shell cmd statusbar expand-notifications ; sleep 4
+          snap 06_notifications
+          adb shell cmd statusbar collapse ; sleep 2
+
+          adb shell am start -n computer.magnetic.support/com.carriez.flutter_hbb.MainActivity
+          sleep 5
+          snap 07_running
+
+          adb shell pkill -INT screenrecord || true
+          sleep 4
+          wait $RECPID 2>/dev/null || true
+          adb pull /sdcard/demo.mp4 demo.mp4
+          ls -la demo.mp4
+          SHEOF
+          chmod +x demo.sh
+
       - name: Boot emulator, drive app, record video
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -57,61 +108,7 @@ jobs:
           profile: pixel_6
           disable-animations: true
           emulator-options: -no-snapshot -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          script: |
-            set -x
-            adb install -r app.apk
-
-            # helper: tap the center of the first UI node whose text/desc matches a regex
-            tap_text() {
-              adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1 || true
-              adb pull /sdcard/ui.xml ui.xml >/dev/null 2>&1 || true
-              python3 tap_text.py "$1" || true
-            }
-            snap() { adb exec-out screencap -p > "shot_$1.png" || true; }
-
-            # start screen recording (runs on device; killed at the end to finalize)
-            adb shell "screenrecord --bit-rate 6000000 --size 720x1600 /sdcard/demo.mp4" &
-            RECPID=$!
-            sleep 2
-
-            # launch the app
-            adb shell am start -n computer.magnetic.support/com.carriez.flutter_hbb.MainActivity
-            sleep 12
-            snap 01_home
-
-            # dismiss possible first-run system dialogs (notifications permission on API 33+)
-            tap_text 'Allow|Consenti' ; sleep 3
-            snap 02_after_notif
-
-            # start the screen sharing service (triggers MediaProjection consent)
-            tap_text 'Start service|Avvia servizio|Start Service' ; sleep 4
-            snap 03_after_start
-
-            # some builds show an explanation dialog first
-            tap_text '^OK$|^Ok$' ; sleep 3
-            snap 04_after_ok
-
-            # MediaProjection system consent (API 34 wording variants)
-            tap_text 'Start now|Inizia adesso|Avvia adesso|Start recording or casting|Entire screen' ; sleep 2
-            tap_text 'Start now|Inizia adesso|Avvia adesso' ; sleep 5
-            snap 05_after_consent
-
-            # show the persistent FGS notification for the camera
-            adb shell cmd statusbar expand-notifications ; sleep 4
-            snap 06_notifications
-            adb shell cmd statusbar collapse ; sleep 2
-
-            # back to the app home showing "service is running" state
-            adb shell am start -n computer.magnetic.support/com.carriez.flutter_hbb.MainActivity
-            sleep 5
-            snap 07_running
-
-            # stop recording cleanly so the mp4 finalizes
-            adb shell pkill -INT screenrecord || true
-            sleep 4
-            wait $RECPID 2>/dev/null || true
-            adb pull /sdcard/demo.mp4 demo.mp4
-            ls -la demo.mp4
+          script: bash demo.sh
 
       - name: Upload video and debug screenshots
         if: always()
