@@ -99,8 +99,10 @@ jobs:
           snap 04_after_start
           dump_ui after_start
 
-          tap_text '^OK$|^Ok$|Got it|Ho capito' ; sleep 3
-          snap 04b_after_ok
+          # anti-scam warning shown before the service starts
+          tap_text '^I Agree$|^Accetto$|^OK$|^Ok$' ; sleep 4
+          snap 04b_after_agree
+          dump_ui after_agree
 
           dump_ui consent_dialog
           tap_text 'Start now|Inizia adesso|Avvia adesso|Start recording or casting|Entire screen' ; sleep 2
