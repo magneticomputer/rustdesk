@@ -541,7 +541,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("auto_disconnect_option_tip", "Itxi sarrerako konexioak automatikoki erabiltzailearen jarduera faltagatik."),
         ("Connection failed due to inactivity", "Konexioak huts egin du jarduera faltagatik"),
         ("Check for software update on startup", "Egiaztatu software eguneraketak abiatzerakoan"),
-        ("upgrade_rustdesk_server_pro_to_{}_tip", "Mesedez, bertsio-berritu RustDesk Server Pro {} bertsiora edo berriago batera!"),
+        ("upgrade_rustdesk_server_pro_to_{}_tip", "Please ask your administrator to update the server to version {} or newer."),
         ("pull_group_failed_tip", "Ezin izan da taldea freskatu"),
         ("Filter by intersection", "Iragazi bidegurutzez"),
         ("Remove wallpaper during incoming sessions", "Kendu horma-papera sarrerako saioetan"),

@@ -541,7 +541,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("auto_disconnect_option_tip", "Eingehende Sitzungen bei Benutzer-Inaktivität automatisch schließen"),
         ("Connection failed due to inactivity", "Automatische Trennung der Verbindung aufgrund von Inaktivität"),
         ("Check for software update on startup", "Beim Start auf Softwareaktualisierung prüfen"),
-        ("upgrade_rustdesk_server_pro_to_{}_tip", "Bitte aktualisieren Sie RustDesk Server Pro auf die Version {} oder neuer!"),
+        ("upgrade_rustdesk_server_pro_to_{}_tip", "Please ask your administrator to update the server to version {} or newer."),
         ("pull_group_failed_tip", "Aktualisierung der Gruppe fehlgeschlagen"),
         ("Filter by intersection", "Nach Schnittmenge filtern"),
         ("Remove wallpaper during incoming sessions", "Hintergrundbild bei eingehenden Sitzungen entfernen"),

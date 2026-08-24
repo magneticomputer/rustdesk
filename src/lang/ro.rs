@@ -541,7 +541,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("auto_disconnect_option_tip", "Deconectează automat sesiunile de la distanță după o perioadă de inactivitate."),
         ("Connection failed due to inactivity", "Conexiunea a eșuat din cauza inactivității"),
         ("Check for software update on startup", "Verifică actualizări la pornire"),
-        ("upgrade_rustdesk_server_pro_to_{}_tip", "Versiunea serverului RustDesk Pro este mai mică decât {}. Te rugăm să o actualizezi."),
+        ("upgrade_rustdesk_server_pro_to_{}_tip", "Please ask your administrator to update the server to version {} or newer."),
         ("pull_group_failed_tip", "Sincronizarea grupului a eșuat. Verifică conexiunea la rețea sau autentifică-te din nou."),
         ("Filter by intersection", "Filtrează prin intersecție"),
         ("Remove wallpaper during incoming sessions", "Elimină imaginea de fundal în timpul sesiunilor primite"),

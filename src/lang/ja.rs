@@ -541,7 +541,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("auto_disconnect_option_tip", "ユーザーが非アクティブの場合、自動的に受信したセッションを閉じる"),
         ("Connection failed due to inactivity", "リモートデスクトップユーザーが非アクティブなため、接続に失敗しました"),
         ("Check for software update on startup", "起動時にソフトウェアの更新を確認する"),
-        ("upgrade_rustdesk_server_pro_to_{}_tip", "RustDesk Server Pro をバージョン {} 以上にアップグレードしてください！"),
+        ("upgrade_rustdesk_server_pro_to_{}_tip", "Please ask your administrator to update the server to version {} or newer."),
         ("pull_group_failed_tip", "グループの更新に失敗しました"),
         ("Filter by intersection", "交差位置でフィルター"),
         ("Remove wallpaper during incoming sessions", "セッションの受信中、デスクトップ背景を削除する"),

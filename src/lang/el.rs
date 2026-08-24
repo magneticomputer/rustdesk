@@ -541,7 +541,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("auto_disconnect_option_tip", "Αυτόματο κλείσιμο εισερχόμενων συνεδριών σε περίπτωση αδράνειας χρήστη"),
         ("Connection failed due to inactivity", "Η σύνδεση τερματίστηκε έπειτα από την πάροδο του χρόνου αδράνειας"),
         ("Check for software update on startup", "Έλεγχος για ενημερώσεις κατά την εκκίνηση"),
-        ("upgrade_rustdesk_server_pro_to_{}_tip", "Παρακαλώ ενημερώστε το RustDesk Server Pro στην έκδοση {} ή νεότερη!"),
+        ("upgrade_rustdesk_server_pro_to_{}_tip", "Please ask your administrator to update the server to version {} or newer."),
         ("pull_group_failed_tip", "Αποτυχία ανανέωσης της ομάδας"),
         ("Filter by intersection", "Φιλτράρισμα κατά διασταύρωση"),
         ("Remove wallpaper during incoming sessions", "Αφαίρεση εικόνας φόντου στις εισερχόμενες συνδέσεις"),

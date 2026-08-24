@@ -541,7 +541,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("auto_disconnect_option_tip", "A bejövő munkamenetek automatikus bezárása, ha a felhasználó inaktív"),
         ("Connection failed due to inactivity", "A kapcsolat inaktivitás miatt megszakadt"),
         ("Check for software update on startup", "Szoftverfrissítés keresése indításkor"),
-        ("upgrade_rustdesk_server_pro_to_{}_tip", "Frissítse a RustDesk Server Prot a(z) {} vagy újabb verzióra!"),
+        ("upgrade_rustdesk_server_pro_to_{}_tip", "Please ask your administrator to update the server to version {} or newer."),
         ("pull_group_failed_tip", "A csoport frissítése nem sikerült"),
         ("Filter by intersection", "Szűrés metszéspontok szerint"),
         ("Remove wallpaper during incoming sessions", "Háttérkép eltávolítása bejövő munkameneteknél"),

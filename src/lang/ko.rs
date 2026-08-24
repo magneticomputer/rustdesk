@@ -540,7 +540,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("auto_disconnect_option_tip", "사용자가 비활성 상태일 때 수신 세션 자동 종료"),
         ("Connection failed due to inactivity", "활동이 없어 자동으로 연결이 끊어졌습니다"),
         ("Check for software update on startup", "시작 시 소프트웨어 업데이트 확인"),
-        ("upgrade_rustdesk_server_pro_to_{}_tip", "RustDesk Server Pro를 {} 버전 이상으로 업그레이드하세요!"),
+        ("upgrade_rustdesk_server_pro_to_{}_tip", "Please ask your administrator to update the server to version {} or newer."),
         ("pull_group_failed_tip", "그룹 새로 고침에 실패했습니다"),
         ("Filter by intersection", "교차해서 필터링"),
         ("Remove wallpaper during incoming sessions", "수신 세션 동안 배경화면 제거"),
